@@ -16,6 +16,8 @@ byte dataToTransfer = 0b10000000;//== Qh on MSBFIRST, Qa on LSBFIRST
 ShiftDisplay2 display(COMMON_CATHODE, 1);
 
 void setup() {
+  Serial.begin(9600);
+  Serial.println("SETUP");
   pinMode(pinLowerDisplay, OUTPUT);
   pinMode(pinUpperDisplay, OUTPUT);
 
@@ -28,21 +30,33 @@ void setup() {
 }
 
 void loop() {
-  display.set("F");
-  digitalWrite(pinLowerDisplay, LOW);
-  display.update();
-  digitalWrite(pinUpperDisplay, HIGH);
-  delay(5);
 
-  //Validate that shiftOut bitwise still works (need it for LEDs later)
-  //display.set("A");
-  digitalWrite(latchPin, LOW);
-  //delay(500);
-  shiftOut(dataPin, clockPin, LSBFIRST, dataToTransfer);
-  
-  digitalWrite(pinUpperDisplay, LOW);
-  digitalWrite(latchPin, HIGH);
-  //display.update();
-  digitalWrite(pinLowerDisplay, HIGH);
-  delay(1);
+  byte b_char = 'A';
+  for (int i = 0; i < 10; i++) {
+    //Serial.println(i);
+    char temp = b_char;
+    //Serial.println(temp);
+    long start = millis();
+
+    while (millis() - start < 1000)
+    {
+      display.set(i);
+      digitalWrite(pinLowerDisplay, LOW);
+      //Disable lower display, then shift/latch the shift-register to new value and enable upper:
+      display.update();
+      digitalWrite(pinUpperDisplay, HIGH);
+      delay(5);
+
+
+      //ground latchPin and hold low for as long as you are transmitting
+
+      display.set(temp);
+      //Disable upper display, then shift/latch the shift-register to new value and enable lower:
+      digitalWrite(pinUpperDisplay, LOW);
+      display.update();
+      digitalWrite(pinLowerDisplay, HIGH);
+      delay(4);
+    }
+    b_char += 1;
+  }
 }
